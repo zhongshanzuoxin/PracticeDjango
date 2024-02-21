@@ -1,0 +1,13 @@
+<h2>注文履歴</h2>
+<ul>
+    {% for order in orders %}
+        <li>
+            注文ID: {{ order.order_id }} - 
+            注文ステータス: {{ order.order_status }} - 
+            注文金額: {{ order.total_amount }} - 
+            注文日時: {{ order.created_at }}  <!-- 注文日時を表示するためには、Orderモデルにcreated_atフィールドを追加する必要があります -->
+        </li>
+    {% empty %}
+        <li>注文履歴がありません。</li>
+    {% endfor %}
+</ul>
