@@ -2,14 +2,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.views.generic import CreateView, ListView, DetailView, View, TemplateView
 from django.contrib.auth.views import LoginView, LogoutView
-from .models import Order, Product, Favorite, Cart
+from .models import Order, Product, Favorite, Cart, ShippingAddress
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.views.decorators.http import require_POST
-from .forms import CustomUserCreationForm
+from .forms import CustomUserCreationForm, ShippingAddressForm
 from django.views import generic
 from django.conf import settings
+from django.views.generic import FormView
+from rest_framework.views import APIView
+from rest_framework.response import Response
 import stripe
 
 
@@ -40,6 +43,11 @@ class ProductListFunc(ListView):
     template_name = 'products/product_list.html'  # 商品リストを表示するテンプレート
 
 
+class ProductDetailFunc(DetailView):
+    model = Product
+    template_name = 'products/product_detail.html'  # 商品詳細ページのテンプレート
+
+
 class OrderDetailFunc(LoginRequiredMixin, DetailView):
     model = Order
     template_name = 'orders/order_detail.html'  # 注文詳細を表示するテンプレート
@@ -61,18 +69,48 @@ class AddToFavoritesFunc(LoginRequiredMixin, View):
 class AddToCartFunc(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         product_id = self.kwargs.get('product_id')
-        product = get_object_or_404(Product, id=product_id)
+        quantity = request.POST.get('quantity', 1)  # フォームから送信された数量を取得
+        product = get_object_or_404(Product, product_id=product_id)
         cart, created = Cart.objects.get_or_create(
             user=request.user, 
-            product=product
+            product=product,
+            defaults={'quantity': 0},  # 新規作成時は数量を0に設定し、後で更新
         )
         if created:
-            cart.quantity = 1  # 新規作成時の数量を設定
+            cart.quantity = quantity  # 新規作成時の数量を設定
         else:
-            cart.quantity += 1  # 既存の場合は数量を増やす
+            cart.quantity += int(quantity)  # 既存の場合は数量を増やす
         cart.save()
-        return redirect('product_detail', pk=product_id)
+        return redirect('cart_view')  # カートページにリダイレクト
 
+class CartFunc(LoginRequiredMixin, View):
+    template_name = 'cart.html'
+
+    def get(self, request, *args, **kwargs):
+        cart_items = Cart.objects.filter(user=request.user)
+        total_price = sum(item.product.price * item.quantity for item in cart_items)
+        context = {
+            'cart_items': cart_items,
+            'total_price': total_price
+        }
+        return render(request, self.template_name, context)
+    
+
+class UpdateCartFunc(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        product_id = self.kwargs.get('product_id')
+        quantity = request.POST.get('quantity', 1)
+        cart_item = get_object_or_404(Cart, user=request.user, product_id=product_id)
+        cart_item.quantity = int(quantity)
+        cart_item.save()
+        return redirect('cart_view')
+
+
+class RemoveFromCartFunc(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        product_id = self.kwargs.get('product_id')
+        Cart.objects.filter(user=request.user, product_id=product_id).delete()
+        return redirect('cart_view')
 
 
 class OrderHistoryFunc(LoginRequiredMixin, ListView):
@@ -109,6 +147,31 @@ class ConfirmOrderFunc(View):
         return HttpResponseRedirect(reverse('order_detail', args=[order_id]))
 
 
+class PaymentMethodView(LoginRequiredMixin, FormView):
+    template_name = 'payment_method.html'
+    form_class = ShippingAddressForm
+    success_url = reverse_lazy('order_confirmation')  # 注文確認画面のURLに適宜変更してください
+
+    def form_valid(self, form):
+        # ここで配送先情報を保存し、セッションに支払い情報を保存する処理を実装します。
+        address = form.save(commit=False)
+        address.user = self.request.user
+        address.save()
+        # 例えば、支払い方法をセッションに保存する
+        self.request.session['payment_method'] = 'credit_card'  # 支払い方法の例
+        return super().form_valid(form)
+
+class OrderConfirmationView(LoginRequiredMixin, TemplateView):
+    template_name = 'order_confirmation.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cart_items'] = Cart.objects.filter(user=self.request.user)
+        context['shipping_address'] = ShippingAddress.objects.filter(user=self.request.user).last()  # 最新の配送先住所を取得
+        context['payment_method'] = self.request.session.get('payment_method', '未選択')
+        return context
+
+
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -141,3 +204,4 @@ class PaymentSuccessFunc(TemplateView):
 
 class PaymentCancelFunc(TemplateView):
     template_name = 'cancel.html'
+

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>注文内容の確認</h2>
+  <h3>カート内の商品</h3>
+  <ul>
+    {% for item in cart_items %}
+      <li>{{ item.product.name }}: {{ item.quantity }}個 ({{ item.product.price }}円)</li>
+    {% endfor %}
+  </ul>
+  <h3>配送先住所</h3>
+  <p>{{ shipping_address.full_name }}</p>
+  <p>{{ shipping_address.address }}</p>
+  <p>{{ shipping_address.phone_number }}</p>
+
+  <h3>支払い方法</h3>
+  <p>{{ payment_method }}</p>
+
+  <form method="post" action="{% url 'finalize_order' %}">
+    {% csrf_token %}
+    <button type="submit">注文を確定する</button>
+  </form>
+{% endblock %}

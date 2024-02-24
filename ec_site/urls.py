@@ -1,10 +1,13 @@
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from .views import (
     Top,
     SignupFunc,
     LoginFunc,
     LogoutFunc,
     ProductListFunc,
+    ProductDetailFunc,
     OrderDetailFunc,
     AddToFavoritesFunc,
     AddToCartFunc,
@@ -14,6 +17,11 @@ from .views import (
     CreateCheckoutSessionFunc,
     PaymentSuccessFunc,
     PaymentCancelFunc,
+    CartFunc,
+    UpdateCartFunc,
+    RemoveFromCartFunc,
+    PaymentMethodView,
+    OrderConfirmationView,
 )
 
 urlpatterns = [
@@ -22,7 +30,10 @@ urlpatterns = [
     path('login/', LoginFunc.as_view(), name='login'),
     path('logout/', LogoutFunc.as_view(), name='logout'),
     path('products/', ProductListFunc.as_view(), name='product_list'),
+    path('products/<int:pk>/', ProductDetailFunc.as_view(), name='product_detail'),
     path('order/<int:pk>/', OrderDetailFunc.as_view(), name='order_detail'),
+    path('payment_method/', PaymentMethodView.as_view(), name='payment_method'),
+    path('order_confirmation/', OrderConfirmationView.as_view(), name='order_confirmation'),
     path('add_to_favorites/<int:product_id>/', AddToFavoritesFunc.as_view(), name='add_to_favorites'),
     path('add_to_cart/<int:product_id>/', AddToCartFunc.as_view(), name='add_to_cart'),
     path('order_history/', OrderHistoryFunc.as_view(), name='order_history'),
@@ -31,4 +42,7 @@ urlpatterns = [
     path('create-checkout-session/', CreateCheckoutSessionFunc.as_view(), name='create_checkout_session'),
     path('success/', PaymentSuccessFunc.as_view(), name='success'),
     path('cancel/', PaymentCancelFunc.as_view(), name='cancel'),
-]
+    path('cart/', CartFunc.as_view(), name='cart_view'),
+    path('update_cart/<int:product_id>/', UpdateCartFunc.as_view(), name='update_cart'),
+    path('remove_from_cart/<int:product_id>/', RemoveFromCartFunc.as_view(), name='remove_from_cart'),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

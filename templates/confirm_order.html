@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>注文の確認</h2>
+
+<div>
+    <h3>注文内容</h3>
+    <p>注文番号: {{ order.id }}</p>
+    <p>注文日時: {{ order.created_at }}</p>
+    <p>配送先: {{ order.shipping_address }}</p>
+    <p>合計金額: {{ order.total_amount }}</p>
+
+    <h4>注文商品</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>商品名</th>
+                <th>数量</th>
+                <th>価格</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.orderproduct_set.all %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.price_per_item }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div>
+    <form action="{% url 'confirm_order' order.id %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">注文を確定する</button>
+    </form>
+</div>
+
+{% endblock %}

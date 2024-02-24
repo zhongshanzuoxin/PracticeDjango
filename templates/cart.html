@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load my_filters %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">カート</h2>
+    {% if cart_items %}
+        <div class="row">
+            {% for item in cart_items %}
+            <div class="col-12 col-md-8 mb-3">
+                <div class="card mb-3" style="flex-direction: row;">
+                    <img src="{{ item.product.images.first.image.url }}" class="card-img-top" alt="{{ item.product.name }}" style="width: 200px; height: auto;">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ item.product.name }}</h5>
+                        <p class="card-text"><small class="text-muted">{{ item.product.description }}</small></p>
+                        <h3 class="text-danger">¥{{ item.product.price|floatformat:"-0" }}</h3>
+                        <p>在庫: {{ item.product.stock }}</p>
+                        <form action="{% url 'update_cart' item.product.product_id %}" method="post" class="d-inline-flex">
+                            {% csrf_token %}
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control me-2" style="width: 80px;">
+                            <button type="submit" class="btn btn-primary btn-sm">更新</button>
+                        </form>
+                        <form action="{% url 'remove_from_cart' item.product.product_id %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">削除</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="row">
+            <div class="col-12 col-md-4 offset-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <p class="fs-4">合計金額: <strong>{{ total_price|floatformat:"-0" }}</strong></p>
+                        <div class="d-grid">
+                            <a href="{% url 'order_confirmation' %}" class="btn btn-warning btn-lg">レジに進む</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <p>カートに商品はありません。</p>
+    {% endif %}
+</div>
+{% endblock %}

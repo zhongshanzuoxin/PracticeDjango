@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+  <h2>Payment Successful</h2>
+  <p>Your payment has been successfully processed. Thank you for your purchase!</p>
+  <a href="{% url 'top' %}" class="btn btn-primary">Go to Homepage</a>
+</div>
+{% endblock %}
