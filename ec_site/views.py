@@ -5,11 +5,12 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic import ListView, DetailView, View, TemplateView
 from django.contrib.auth.views import LoginView, LogoutView
-from .models import Order, Product, OrderProduct, CustomUser
+from .models import Order, Product, OrderProduct, CustomUser, Payment
 from allauth.account import views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import  SignupUserForm, ProfileForm
 from django.conf import settings
+from django.http import HttpResponse
 import stripe
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -149,3 +150,55 @@ class OrderView(LoginRequiredMixin, View):
         except ObjectDoesNotExist:
             return render(request, 'order.html')
         
+
+class PaymentView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        order = Order.objects.get(user=request.user, ordered=False)
+        user_data = CustomUser.objects.get(id=request.user.id)
+        context = {
+            'order': order,
+            'user_data': user_data
+        }
+        return render(request, 'payment.html', context)
+    
+    def post(self, request, *args, **kwargs):
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        order = Order.objects.get(user=request.user, ordered=False)
+        token = request.POST.get('stripeToken')
+        if not token:
+            return HttpResponse('Invalid token', status=400)
+        order_products = order.products.all()
+        amount = order.get_total()
+        product_list = []
+        for order_product in order_products:
+            product_list.append(str(order_product.product) + ':' + str(order_product.quantity))
+        description = ' '.join(product_list)
+
+        try:
+            charge = stripe.Charge.create(
+                amount=amount,
+                currency='jpy',
+                description=description,
+                source=token,
+            )
+        except stripe.error.StripeError as e:
+            return HttpResponse(str(e), status=400)
+
+        payment = Payment(user=request.user)
+        payment.stripe_charge_id = charge['id']
+        payment.amount = amount
+        payment.save()
+
+        order_products.update(ordered=True)
+        for product in order_products:
+            product.save()
+
+        order.ordered = True
+        order.payment = payment
+        order.save()
+        return redirect('thanks')
+    
+class ThanksView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'thanks.html')
+

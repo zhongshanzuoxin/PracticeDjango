@@ -14,6 +14,8 @@ from .views import (
     ReductionProduct,
     RemoveProduct,
     OrderView,
+    PaymentView,
+    ThanksView,
 )
 
 urlpatterns = [
@@ -29,4 +31,6 @@ urlpatterns = [
     path('reduce/<slug:slug>/', ReductionProduct, name='reduction_product'),
     path('remove/<slug:slug>/', RemoveProduct, name='remove_product'),
     path('order/', OrderView.as_view(), name='order'),
+    path('payment/', PaymentView.as_view(), name='payment'),
+    path('thanks/', ThanksView.as_view(), name='thanks'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

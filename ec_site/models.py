@@ -108,16 +108,26 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     ordered_date = models.DateTimeField()
     ordered = models.BooleanField(default=False)
+    payment = models.ForeignKey('Payment', on_delete=models.SET_NULL, blank=True, null=True)
 
     def get_total(self):
         total = 0
         for order_product in self.products.all():
             total += order_product.get_total_product_price()
-        return total
+        return int(total)
     
     def __str__(self):
         return self.user.email
+    
 
+class Payment(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True)
+    stripe_charge_id = models.CharField(max_length=50)
+    amount = models.IntegerField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user.email
 
 
 

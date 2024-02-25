@@ -19,7 +19,7 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <a class="nav-link">こんにちは、{{ user_data.full_name }}</a>
+              <a class="nav-link">こんにちは、{{ request.user.full_name }}さん</a>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -35,7 +35,7 @@
             {% load cart_tags %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'order' %}">カート
-                <span class="badge badge-pill badge-warning">
+                <span class="badge bg-warning text-dark">
                   {{ request.user|product_count }}
                 </span>
               </a>
@@ -63,5 +63,8 @@
 
     {% block content %}
     {% endblock content %}
+
+    {% block extra_js %}
+    {% endblock %}
   </body>
 </html>

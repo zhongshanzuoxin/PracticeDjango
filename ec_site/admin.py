@@ -1,7 +1,6 @@
 # Register your models here.
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Order, OrderProduct, Product, ProductImage, Category
+from .models import CustomUser, Order, Product, ProductImage, Category, Payment, OrderProduct
 
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
@@ -12,5 +11,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 admin.site.register(CustomUser)
 admin.site.register(Order)
+admin.site.register(OrderProduct)
 admin.site.register(Product, ProductAdmin)  # ProductをProductAdminで登録
+admin.site.register(Payment)
 admin.site.register(Category)

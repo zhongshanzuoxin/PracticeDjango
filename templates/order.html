@@ -37,7 +37,7 @@
             </div>
             <div class="col-md-3 text-right">
               <p>
-                価格：<span class="text-danger font-weight-bold">{{ order_product.get_total_product_price }}円</span>
+                価格：<span class="text-danger font-weight-bold">{{ order_product.get_total_product_price|floatformat:"0" }}円</span>
               </p>
             </div>
           </div>
@@ -56,10 +56,10 @@
         <div class="card-body text-center">
           {% if order.get_total %}
           <p>
-            小計：<span class="font-weight-bold">{{ order.get_total }}</span>円
+            小計：<span class="font-weight-bold">{{ order.get_total|floatformat:"0" }}</span>円
           </p>
           <div class="mb-3">
-            <a class="btn btn-warning" href="">レジに進む</a>
+            <a class="btn btn-warning" href="{% url 'payment' %}">レジに進む</a>
           </div>
           {% endif %}
           <a class="btn btn-primary" href="{% url 'product_list' %}">買い物を続ける</a>
