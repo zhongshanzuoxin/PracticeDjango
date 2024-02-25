@@ -1,21 +1,19 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.forms import UserChangeForm
-from .models import CustomUser, ShippingAddress
+from .models import CustomUser
+from allauth.account.forms import SignupForm
+from allauth.account.models import EmailAddress
+from allauth.account.adapter import get_adapter
 
-class CustomUserCreationForm(UserCreationForm):
-    class Meta(UserCreationForm.Meta):
-        model = CustomUser
-        fields = ('username', 'email')
+class SignupUserForm(SignupForm):
+    first_name = forms.CharField(max_length=30, label='名字')
+    last_name = forms.CharField(max_length=30, label='名前')
+
+    def signup(self, request, user):
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
+        user.save()
+
+class ProfileForm(forms.Form):
+    full_name = forms.CharField(max_length=30, label='名前')
 
 
-class CustomUserChangeForm(UserChangeForm):
-    class Meta:
-        model = CustomUser
-        fields = ('username', 'email') 
-
-
-class ShippingAddressForm(forms.ModelForm):
-    class Meta:
-        model = ShippingAddress
-        fields = ['full_name', 'address', 'phone_number']

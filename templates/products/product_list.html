@@ -8,29 +8,29 @@
     <div class="col">
       <div class="card h-100">
         <!-- Wrap the image with an anchor tag for linking to the product detail page -->
-        <a href="{% url 'product_detail' product.product_id %}" style="text-decoration: none; color: inherit;">
+        <a href="{% url 'product_detail' product.slug %}" style="text-decoration: none; color: inherit;">
           {% if product.images.all %}
-          <img src="{{ product.images.all.0.image.url }}" class="card-img-top" alt="{{ product.name }}">
+          <img src="{{ product.images.all.0.image.url }}" class="card-img-top" alt="{{ product.product_name }}">
           {% else %}
           <img src="https://via.placeholder.com/150" class="card-img-top" alt="Placeholder">
           {% endif %}
         </a>
         <!-- Wrap the card-body with the same anchor tag -->
-        <a href="{% url 'product_detail' product.product_id %}" style="text-decoration: none; color: inherit;">
+        <a href="{% url 'product_detail' product.slug %}" style="text-decoration: none; color: inherit;">
           <div class="card-body">
-            <h5 class="card-title">{{ product.name }}</h5>
+            <h5 class="card-title">{{ product.product_name }}</h5>
             <p class="card-text">{{ product.description }}</p>
             <p class="card-text"><strong>¥{{ product.price|floatformat:"-0" }}</strong></p>
           </div>
         </a>
         <div class="card-footer">
           <!-- 数量選択フォーム -->
-          <form action="{% url 'add_to_cart' product.product_id %}" method="post" class="d-flex">
+          <form action="{% url 'product_detail' product.slug %}" method="post" class="d-flex">
             {% csrf_token %}
             <input type="number" name="quantity" value="1" min="1" class="form-control me-2" style="width: 80px;">
             <button type="submit" class="btn btn-primary">カートに追加</button>
           </form>
-          <a href="{% url 'add_to_favorites' product.product_id %}" class="btn btn-secondary mt-2">Add to Favorites</a>
+          <a href="{% url 'product_detail' product.slug %}" class="btn btn-secondary mt-2">Add to Favorites</a>
         </div>
       </div>
     </div>
