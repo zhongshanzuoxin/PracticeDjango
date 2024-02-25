@@ -5,12 +5,13 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic import ListView, DetailView, View, TemplateView
 from django.contrib.auth.views import LoginView, LogoutView
-from .models import Order, Product, OrderProduct, CustomUser, Payment
+from .models import Product, Order, OrderProduct, CustomUser, Payment
 from allauth.account import views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import  SignupUserForm, ProfileForm
 from django.conf import settings
 from django.http import HttpResponse
+from django.contrib import messages
 import stripe
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -67,32 +68,34 @@ class ProductDetailFunc(DetailView):
         product_data = Product.objects.get(slug=self.kwargs['slug'])
         return render(request, 'products/product_detail.html', {'product_data': product_data})
 
+
 @login_required
 def AddProduct(request, slug):
     product = get_object_or_404(Product, slug=slug)
+    quantity = int(request.POST.get('quantity', 1))  # フォームから送信された数量を取得
     order_product, created = OrderProduct.objects.get_or_create(
         product=product,
         user=request.user,
         ordered=False
     )
-    order = Order.objects.filter(user=request.user, ordered=False)
-
-    if order.exists():
-        order = order[0]
+    order_qs = Order.objects.filter(user=request.user, ordered=False)
+    if order_qs.exists():
+        order = order_qs[0]
         if order.products.filter(product__slug=product.slug).exists():
-            order_product.quantity += 1
+            order_product.quantity += quantity  # 既存の数量に追加
             order_product.save()
         else:
+            order_product.quantity = quantity  # 新しい数量を設定
+            order_product.save()
             order.products.add(order_product)
     else:
         order = Order.objects.create(user=request.user, ordered_date=timezone.now())
+        order_product.quantity = quantity  # 新しい数量を設定
+        order_product.save()
         order.products.add(order_product)
     
     return redirect('order')
 
-from django.shortcuts import get_object_or_404, redirect
-from .models import Product, Order, OrderProduct
-from django.contrib import messages
 
 def ReductionProduct(request, slug):
     product = get_object_or_404(Product, slug=slug)
@@ -156,6 +159,7 @@ class PaymentView(LoginRequiredMixin, View):
         order = Order.objects.get(user=request.user, ordered=False)
         user_data = CustomUser.objects.get(id=request.user.id)
         context = {
+            'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
             'order': order,
             'user_data': user_data
         }
@@ -191,6 +195,8 @@ class PaymentView(LoginRequiredMixin, View):
 
         order_products.update(ordered=True)
         for product in order_products:
+            product.product.stock -= product.quantity  # 在庫を減らす
+            product.product.save()  # Productモデルの更新を保存
             product.save()
 
         order.ordered = True

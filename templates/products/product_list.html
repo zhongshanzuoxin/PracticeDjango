@@ -23,15 +23,6 @@
             <p class="card-text"><strong>¥{{ product.price|floatformat:"-0" }}</strong></p>
           </div>
         </a>
-        <div class="card-footer">
-          <!-- 数量選択フォーム -->
-          <form action="{% url 'product_detail' product.slug %}" method="post" class="d-flex">
-            {% csrf_token %}
-            <input type="number" name="quantity" value="1" min="1" class="form-control me-2" style="width: 80px;">
-            <button type="submit" class="btn btn-primary">カートに追加</button>
-          </form>
-          <a href="{% url 'product_detail' product.slug %}" class="btn btn-secondary mt-2">Add to Favorites</a>
-        </div>
       </div>
     </div>
     {% endfor %}
