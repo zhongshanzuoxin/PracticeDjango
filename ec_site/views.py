@@ -4,11 +4,10 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic import ListView, DetailView, View, TemplateView
-from django.contrib.auth.views import LoginView, LogoutView
 from .models import Product, Order, OrderProduct, CustomUser, Payment
 from allauth.account import views
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .forms import  SignupUserForm, ProfileForm
+from .forms import  SignupUserForm, ProfileForm, ShippingAddressForm
 from django.conf import settings
 from django.http import HttpResponse
 from django.contrib import messages
@@ -46,18 +45,36 @@ class ProfileEditView(LoginRequiredMixin, View):
             return redirect('profile')
         
         return render(request, 'profile_edit.html', {'form': form})
+    
+
+def AddShippingAddress(request):
+    if request.method == 'POST':
+        form = ShippingAddressForm(request.POST)
+        if form.is_valid():
+            shipping_address = form.save(commit=False)
+            shipping_address.user = request.user
+            shipping_address.save()
+            return redirect('some_view_name')
+    else:
+        form = ShippingAddressForm()
+    return render(request, 'add_shipping_address.html', {'form': form})
+
 
 class SignupFunc(views.SignupView):
     form_class = SignupUserForm
     success_url = reverse_lazy('top') 
     template_name = 'signup.html' 
 
-class LoginFunc(LoginView):
+class LoginFunc(views.LoginView):
     template_name = 'login.html'
     authentication_form = None
 
-class LogoutFunc(LogoutView):
-    next_page = reverse_lazy('top')
+class LogoutFunc(views.LogoutView):
+    def post(self, request, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            self.logout()
+        return redirect('login')
+
 
 class ProductListFunc(ListView):
     model = Product

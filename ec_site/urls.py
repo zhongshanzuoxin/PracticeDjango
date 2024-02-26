@@ -8,6 +8,7 @@ from .views import (
     LogoutFunc,
     ProfileView,
     ProfileEditView,
+    AddShippingAddress,
     ProductListFunc,
     ProductDetailFunc,
     AddProduct,
@@ -20,11 +21,12 @@ from .views import (
 
 urlpatterns = [
     path('', Top.as_view(), name='top'),
-    path('signup/', SignupFunc.as_view(), name='signup'),
-    path('login/', LoginFunc.as_view(), name='login'),
+    path('accounts/signup/', SignupFunc.as_view(), name='signup'),
+    path('accounts/login/', LoginFunc.as_view(), name='login'),
     path('logout/', LogoutFunc.as_view(), name='logout'),
     path('profile/', ProfileView.as_view(), name='profile'),
     path('profile/edit/', ProfileEditView.as_view(), name='profile_edit'),
+    path('add_shipping_address/', AddShippingAddress, name='add_shipping_address'),
     path('products/', ProductListFunc.as_view(), name='product_list'),
     path('product/<slug>/', ProductDetailFunc.as_view(), name='product_detail'),
     path('add_product/<slug>', AddProduct, name='add_product'),

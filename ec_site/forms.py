@@ -1,19 +1,20 @@
 from django import forms
-from .models import CustomUser
+from .models import ShippingAddress
 from allauth.account.forms import SignupForm
-from allauth.account.models import EmailAddress
-from allauth.account.adapter import get_adapter
 
 class SignupUserForm(SignupForm):
-    first_name = forms.CharField(max_length=30, label='名字')
-    last_name = forms.CharField(max_length=30, label='名前')
+    full_name = forms.CharField(max_length=30, label='名前')
 
-    def signup(self, request, user):
-        user.first_name = self.cleaned_data['first_name']
-        user.last_name = self.cleaned_data['last_name']
+    def save(self, request):
+        user = super(SignupUserForm, self).save(request)
+        user.full_name = self.cleaned_data['full_name']
         user.save()
+        return user
 
 class ProfileForm(forms.Form):
     full_name = forms.CharField(max_length=30, label='名前')
 
-
+class ShippingAddressForm(forms.ModelForm):
+    class Meta:
+        model = ShippingAddress
+        fields = ['postal_code', 'prefectures', 'city', 'address_line1', 'address_line2', 'phone_number']

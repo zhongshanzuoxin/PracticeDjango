@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.core.validators import RegexValidator
 
 class CustomUserManager(BaseUserManager):
     def _create_user(self, email, password, **extra_fields):
@@ -60,6 +61,32 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def clean(self):
         super().clean()
         self.email = self.__class__.objects.normalize_email(self.email)
+
+class ShippingAddress(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    postal_code = models.CharField(max_length=7, verbose_name='郵便番号')
+    prefectures = models.CharField(max_length=10, verbose_name='都道府県')
+    city = models.CharField(max_length=50, verbose_name='市区町村')
+    address_line1 = models.CharField(max_length=100, verbose_name='町名・番地')
+    address_line2 = models.CharField(max_length=100, blank=True, verbose_name='建物名・部屋番号')
+    phone_number = models.CharField(
+        max_length=11,
+        validators=[
+            RegexValidator(
+                regex=r'^\d{10,11}$',
+                message='電話番号はハイフン無しの10桁または11桁の数字で入力してください。'
+            ),
+        ],
+        verbose_name='電話番号'
+    )
+
+    def __str__(self):
+        return f"{self.user.email}の配送先"
+    
+class Meta:
+    verbose_name = '配送先アドレス'
+    verbose_name_plural = '配送先アドレス'
+
 
 
 class Category(models.Model):
