@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic import ListView, DetailView, View, TemplateView
-from .models import Product, Order, OrderProduct, CustomUser, Payment
+from .models import Product, Order, OrderProduct, CustomUser, Payment, ShippingAddress
 from allauth.account import views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import  SignupUserForm, ProfileForm, ShippingAddressForm
@@ -54,16 +54,25 @@ def AddShippingAddress(request):
             shipping_address = form.save(commit=False)
             shipping_address.user = request.user
             shipping_address.save()
-            return redirect('some_view_name')
+            return redirect('shipping_address_list')
     else:
         form = ShippingAddressForm()
     return render(request, 'add_shipping_address.html', {'form': form})
+
+class ShippingAddressList(LoginRequiredMixin, ListView):
+    model = ShippingAddress
+    template_name = 'shipping_address_list.html'
+    context_object_name = 'shipping_addresses'
+
+    def get_queryset(self):
+        return ShippingAddress.objects.filter(user=self.request.user)
 
 
 class SignupFunc(views.SignupView):
     form_class = SignupUserForm
     success_url = reverse_lazy('top') 
     template_name = 'signup.html' 
+    
 
 class LoginFunc(views.LoginView):
     template_name = 'login.html'

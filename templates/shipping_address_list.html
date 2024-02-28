@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4">配送先住所一覧</h2>
+    {% if shipping_addresses %}
+    <div class="list-group">
+        {% for address in shipping_addresses %}
+        <a href="#" class="list-group-item list-group-item-action" aria-current="true">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ address.prefectures }} {{ address.city }}</h5>
+                <small>郵便番号: {{ address.postal_code }}</small>
+                <small>受取人名: {{ address.recipient_name }}</small>
+                <small>電話番号: {{ address.phone_number }}</small>
+            </div>
+            <p class="mb-1">{{ address.address_line1 }} {{ address.address_line2 }}</p>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-warning" role="alert">
+        登録された配送先住所がありません。
+    </div>
+    {% endif %}
+    <div class="mt-4">
+        <a href="{% url 'add_shipping_address' %}" class="btn btn-primary">住所を登録する</a>
+    </div>
+</div>
+{% endblock %}

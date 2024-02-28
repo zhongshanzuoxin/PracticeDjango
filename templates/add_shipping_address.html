@@ -1,10 +1,56 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
 
 {% block content %}
-<form method="post">
-    {% csrf_token %}
-    {{ form|crispy }}
-    <button type="submit" class="btn btn-primary">登録</button>
-</form>
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="card">
+                    <div class="card-header">
+                        配送先住所を追加
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                {% render_field form.recipient_name class="form-control" placeholder="受取人" id="recipient_name" %}
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    {% render_field form.postal_code class="form-control" placeholder="郵便番号" id="postal_code" %}
+                                    <button type="button" id="auto_fill_address" class="btn btn-info">自動入力する</button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                {% render_field form.prefectures class="form-select" id="prefectures" %}
+                            </div>
+                            <div class="col-12">
+                                {% render_field form.city class="form-control" placeholder="市区町村" id="city" %}
+                            </div>
+                            <div class="col-12">
+                                {% render_field form.address_line1 class="form-control" placeholder="町名・番地" id="address_line1" %}
+                            </div>
+                            <div class="col-12">
+                                {% render_field form.address_line2 class="form-control" placeholder="建物名・部屋番号" id="address_line2" %}
+                            </div>
+                            <div class="col-12">
+                                {% render_field form.phone_number class="form-control" placeholder="電話番号" id="phone_number" %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-end">
+                        <button type="submit" class="btn btn-primary">登録</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'ec_site/js/postal_code.js' %}"></script>
 {% endblock %}

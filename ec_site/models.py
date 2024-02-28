@@ -64,6 +64,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 class ShippingAddress(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    recipient_name = models.CharField(max_length=30, verbose_name='受取人名')
     postal_code = models.CharField(max_length=7, verbose_name='郵便番号')
     prefectures = models.CharField(max_length=10, verbose_name='都道府県')
     city = models.CharField(max_length=50, verbose_name='市区町村')

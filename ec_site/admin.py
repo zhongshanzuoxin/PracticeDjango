@@ -10,7 +10,7 @@ class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductImageInline,]
 
 class ShippingAddressAdmin(admin.ModelAdmin):
-    list_display = ('user', 'postal_code', 'prefectures', 'city', 'address_line1', 'address_line2', 'phone_number')
+    list_display = ('user', 'recipient_name', 'postal_code', 'prefectures', 'city', 'address_line1', 'address_line2', 'phone_number')
 
 class ShippingAddressInline(admin.TabularInline):
     model = ShippingAddress
