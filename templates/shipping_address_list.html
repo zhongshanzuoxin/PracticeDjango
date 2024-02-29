@@ -6,7 +6,7 @@
     {% if shipping_addresses %}
     <div class="list-group">
         {% for address in shipping_addresses %}
-        <a href="#" class="list-group-item list-group-item-action" aria-current="true">
+        <a href="{% url 'edit_shipping_address' address.id %}" class="list-group-item list-group-item-action" aria-current="true">
             <div class="d-flex w-100 justify-content-between">
                 <h5 class="mb-1">{{ address.prefectures }} {{ address.city }}</h5>
                 <small>郵便番号: {{ address.postal_code }}</small>
@@ -15,6 +15,10 @@
             </div>
             <p class="mb-1">{{ address.address_line1 }} {{ address.address_line2 }}</p>
         </a>
+        <form action="{% url 'delete_shipping_address' address.id %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm">削除</button>
+        </form>
         {% endfor %}
     </div>
     {% else %}

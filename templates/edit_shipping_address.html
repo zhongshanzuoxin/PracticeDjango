@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="card">
+                    <div class="card-header">
+                        配送先住所を編集
+                    </div>
+                    <div class="card-body">
+                        <!-- フォームフィールドをここに配置 -->
+                        {% for field in form %}
+                            <div class="mb-3">
+                                {{ field.label_tag }}
+                                {{ field }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="card-footer text-end">
+                        <button type="submit" class="btn btn-primary">更新</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

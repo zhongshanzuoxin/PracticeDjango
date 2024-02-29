@@ -59,6 +59,26 @@ def AddShippingAddress(request):
         form = ShippingAddressForm()
     return render(request, 'add_shipping_address.html', {'form': form})
 
+@login_required
+def EditShippingAddress(request, id):
+    shipping_address = get_object_or_404(ShippingAddress, id=id, user=request.user)
+    if request.method == 'POST':
+        form = ShippingAddressForm(request.POST, instance=shipping_address)
+        if form.is_valid():
+            form.save()
+            return redirect('shipping_address_list')
+    else:
+        form = ShippingAddressForm(instance=shipping_address)
+    return render(request, 'edit_shipping_address.html', {'form': form})
+
+@login_required
+def DeleteShippingAddress(request, id):
+    shipping_address = get_object_or_404(ShippingAddress, id=id, user=request.user)
+    if request.method == 'POST':
+        shipping_address.delete()
+        return redirect('shipping_address_list')
+    return render(request, 'shipping_address_list.html')
+
 class ShippingAddressList(LoginRequiredMixin, ListView):
     model = ShippingAddress
     template_name = 'shipping_address_list.html'
