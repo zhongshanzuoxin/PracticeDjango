@@ -13,6 +13,7 @@ class SignupUserForm(SignupForm):
 
 class ProfileForm(forms.Form):
     full_name = forms.CharField(max_length=30, label='名前')
+    
 
 class ShippingAddressForm(forms.ModelForm):
     PREFECTURE_CHOICES = [

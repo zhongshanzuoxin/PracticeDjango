@@ -24,6 +24,13 @@ class ProfileView(View):
 
         return render(request, 'profile.html', {'user_data': user_data})
     
+from allauth.account.views import EmailView
+from django.urls import reverse
+
+class CustomEmailView(EmailView):
+    template_name = 'account/email.html'
+    pass
+    
 class ProfileEditView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         user_data = CustomUser.objects.get(id=request.user.id)

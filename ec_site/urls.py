@@ -1,6 +1,7 @@
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
+from allauth.account.views import EmailView
 from .views import (
     Top,
     SignupFunc,
@@ -8,6 +9,7 @@ from .views import (
     LogoutFunc,
     ProfileView,
     ProfileEditView,
+    CustomEmailView,
     AddShippingAddress,
     EditShippingAddress,
     DeleteShippingAddress,
@@ -29,6 +31,7 @@ urlpatterns = [
     path('logout/', LogoutFunc.as_view(), name='logout'),
     path('profile/', ProfileView.as_view(), name='profile'),
     path('profile/edit/', ProfileEditView.as_view(), name='profile_edit'),
+    path('email/', CustomEmailView.as_view(), name='account_email'),
     path('add_shipping_address/', AddShippingAddress, name='add_shipping_address'),
     path('edit_shipping_address/<int:id>/', EditShippingAddress, name='edit_shipping_address'),
     path('shipping_address_list/', ShippingAddressList.as_view(), name='shipping_address_list'),

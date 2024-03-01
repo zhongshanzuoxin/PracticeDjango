@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load allauth %}
+{% block head_title %}
+    {% trans "Email Address" %}
+{% endblock head_title %}
+{% block content %}
+<div class="container mt-4">
+    <h1>{% trans "Email Address" %}</h1>
+    {% if not emailaddresses %}
+        {% include "account/snippets/warn_no_email.html" %}
+    {% endif %}
+    {% url 'account_email' as action_url %}
+    <form method="post" action="{{ action_url }}" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="mb-3">
+            {% if current_emailaddress %}
+                <label for="currentEmail" class="form-label">{% translate "Current email" %}:</label>
+                <input type="email" class="form-control" id="currentEmail" value="{{ current_emailaddress.email|default_if_none:'' }}" disabled>
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            {% if new_emailaddress %}
+                <label for="newEmail" class="form-label">
+                    {% if not current_emailaddress %}
+                        {% translate "Current email" %}:
+                    {% else %}
+                        {% translate "Changing to" %}:
+                    {% endif %}
+                </label>
+                <input type="email" class="form-control" id="newEmail" value="{{ new_emailaddress.email|default_if_none:'' }}" disabled>
+                <div id="emailHelp" class="form-text">{% trans 'Your email address is still pending verification.' %}</div>
+                <button form="pending-email" type="submit" name="action_send" class="btn btn-secondary btn-sm">{% trans 'Re-send Verification' %}</button>
+                {% if current_emailaddress %}
+                    <button form="pending-email" type="submit" name="action_remove" class="btn btn-danger btn-sm">{% trans 'Cancel Change' %}</button>
+                {% endif %}
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">{% translate "新しいメールアドレス" %}:</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ form.email.value|default:'' }}" required>
+            <div class="invalid-feedback">
+                {% for error in form.email.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        </div>
+        <button type="submit" name="action_add" class="btn btn-primary">{% trans "Change Email" %}</button>
+    </form>
+    {% if new_emailaddress %}
+        <form id="pending-email" method="post" action="{% url 'account_email' %}" style="display: none;">
+            {% csrf_token %}
+            <input type="hidden" name="email" value="{{ new_emailaddress.email|default_if_none:'' }}">
+        </form>
+    {% endif %}
+</div>
+{% endblock content %}

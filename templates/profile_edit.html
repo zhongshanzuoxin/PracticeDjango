@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
-{% load crispy_forms_tags %}
+
+{% load widget_tweaks %}
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-6 offset-md-3">
@@ -11,7 +12,8 @@
                     <form method="post" class="mt-4">
                         {% csrf_token %}
                         <div class="mb-3">
-                            {{ form.full_name|as_crispy_field }}
+                            <label for="full_name">名前</label>
+                            {% render_field form.full_name class="form-control" %}
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">更新</button>
