@@ -1,13 +1,15 @@
+from typing import Any
+from django.db import models
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.views.generic import ListView, DetailView, View, TemplateView
+from django.views.generic import ListView, DetailView, View, TemplateView, UpdateView
 from .models import Product, Order, OrderProduct, CustomUser, Payment, ShippingAddress
 from allauth.account import views
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .forms import  SignupUserForm, ProfileForm, ShippingAddressForm
+from .forms import  SignupUserForm, ShippingAddressForm
 from django.conf import settings
 from django.http import HttpResponse
 from django.contrib import messages
@@ -24,34 +26,34 @@ class ProfileView(View):
 
         return render(request, 'profile.html', {'user_data': user_data})
     
-from allauth.account.views import EmailView
-from django.urls import reverse
+from allauth.account.views import EmailView, PasswordResetView, PasswordResetDoneView, PasswordResetFromKeyView, PasswordResetFromKeyDoneView
 
 class CustomEmailView(EmailView):
     template_name = 'account/email.html'
     pass
-    
-class ProfileEditView(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        user_data = CustomUser.objects.get(id=request.user.id)
-        form = ProfileForm(
-            request.POST or None,
-            initial={
-                'full_name': user_data.full_name,
-            }
-        )
 
-        return render(request, 'profile_edit.html', {'form': form})
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'account/password_reset.html'
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'account/password_reset_done.html'
+
+class CustomPasswordResetFromKeyView(PasswordResetFromKeyView):
+    template_name = 'account/password_reset_from_key.html'
+
+class CustomPasswordResetFromKeyDoneView(PasswordResetFromKeyDoneView):
+    template_name = 'account/password_reset_from_key_done.html'
     
-    def post(self, request, *args, **kwargs):
-        form = ProfileForm(request.POST or None)
-        if form.is_valid():
-            user_data = CustomUser.objects.get(id=request.user.id)
-            user_data.full_name = form.cleaned_data['full_name']
-            user_data.save()
-            return redirect('profile')
-        
-        return render(request, 'profile_edit.html', {'form': form})
+
+class NameEditView(LoginRequiredMixin, UpdateView):
+    model = CustomUser
+    fields = ['full_name']
+    template_name = 'name_edit.html'
+    success_url = reverse_lazy('profile')
+
+    def get_object(self):
+        return self.request.user
+
     
 
 def AddShippingAddress(request):

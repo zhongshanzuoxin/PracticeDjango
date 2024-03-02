@@ -1,15 +1,18 @@
-from django.urls import path
+from django.urls import path, re_path
 from django.conf import settings
 from django.conf.urls.static import static
-from allauth.account.views import EmailView
 from .views import (
     Top,
     SignupFunc,
     LoginFunc,
     LogoutFunc,
     ProfileView,
-    ProfileEditView,
+    NameEditView,
     CustomEmailView,
+    CustomPasswordResetView,
+    CustomPasswordResetDoneView,
+    CustomPasswordResetFromKeyView,
+    CustomPasswordResetFromKeyDoneView,
     AddShippingAddress,
     EditShippingAddress,
     DeleteShippingAddress,
@@ -30,8 +33,12 @@ urlpatterns = [
     path('accounts/login/', LoginFunc.as_view(), name='login'),
     path('logout/', LogoutFunc.as_view(), name='logout'),
     path('profile/', ProfileView.as_view(), name='profile'),
-    path('profile/edit/', ProfileEditView.as_view(), name='profile_edit'),
-    path('email/', CustomEmailView.as_view(), name='account_email'),
+    path('profile/edit/name/', NameEditView.as_view(), name='name_edit'),
+    path('reset_email/', CustomEmailView.as_view(), name='account_email'),
+    path('reset_password/', CustomPasswordResetView.as_view(), name='account_reset_password'),
+    path('password/reset/done/', CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
+    re_path(r'^accounts/password/reset/key/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$', CustomPasswordResetFromKeyView.as_view(), name='account_reset_password_from_key'),
+    path('password/reset/key/done/', CustomPasswordResetFromKeyDoneView.as_view(), name='account_reset_password_from_key_done'),
     path('add_shipping_address/', AddShippingAddress, name='add_shipping_address'),
     path('edit_shipping_address/<int:id>/', EditShippingAddress, name='edit_shipping_address'),
     path('shipping_address_list/', ShippingAddressList.as_view(), name='shipping_address_list'),

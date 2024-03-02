@@ -10,20 +10,34 @@
                     <tr>
                         <th class="header">名前</th>
                         <td class="data">{{ user_data.full_name }}</td>
+                        <td>
+                            <!-- 名前編集ページへのリンク -->
+                            <a href="{% url 'name_edit' %}" class="btn btn-sm btn-primary">編集</a>
+                        </td>
                     </tr>
                     <tr>
                         <th class="header">メールアドレス</th>
                         <td class="data">{{ user_data.email }}</td>
+                        <td>
+                            <!-- メールアドレス編集ページへのリンク -->
+                            <a href="{% url 'account_email' %}" class="btn btn-sm btn-primary">編集</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="header">パスワード</th>
+                        <td class="data">********</td>
+                        <td>
+                            <a href="{% url 'account_reset_password' %}" class="btn btn-sm btn-primary">編集</a>
+                        </td>
                     </tr>
                     <tr>
                         <th class="header">入会日</th>
                         <td class="data">{{ user_data.created_at }}</td>
+                        <!-- 入会日は編集不可と仮定 -->
                     </tr>
                 </tbody>
             </table>
-            <div class="button mx-auto">
-                <a class="btn btn-lg btn-warning btn-block" href="">編集する</a>
-            </div>
+            <!-- ここにあった全体の編集ボタンは削除 -->
         </div>
     </div>
 </div>
