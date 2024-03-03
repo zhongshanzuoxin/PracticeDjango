@@ -2,7 +2,6 @@ from django.urls import path, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from .views import (
-    Top,
     SignupFunc,
     LoginFunc,
     LogoutFunc,
@@ -19,7 +18,7 @@ from .views import (
     ShippingAddressList,
     ProductListFunc,
     ProductDetailFunc,
-    AddProduct,
+    AddProductToCart,
     ReductionProduct,
     RemoveProduct,
     OrderView,
@@ -31,7 +30,6 @@ from .views import (
 )
 
 urlpatterns = [
-    path('', Top.as_view(), name='top'),
     path('accounts/signup/', SignupFunc.as_view(), name='signup'),
     path('accounts/login/', LoginFunc.as_view(), name='login'),
     path('logout/', LogoutFunc.as_view(), name='logout'),
@@ -46,9 +44,9 @@ urlpatterns = [
     path('edit_shipping_address/<int:id>/', EditShippingAddress, name='edit_shipping_address'),
     path('shipping_address_list/', ShippingAddressList.as_view(), name='shipping_address_list'),
     path('delete_shipping_address/<int:id>/', DeleteShippingAddress, name='delete_shipping_address'),
-    path('products/', ProductListFunc.as_view(), name='product_list'),
+    path('', ProductListFunc.as_view(), name='product_list'),
     path('product/<slug>/', ProductDetailFunc.as_view(), name='product_detail'),
-    path('add_product/<slug>', AddProduct, name='add_product'),
+    path('add_product/<slug>', AddProductToCart, name='add_product'),
     path('reduce/<slug:slug>/', ReductionProduct, name='reduction_product'),
     path('remove/<slug:slug>/', RemoveProduct, name='remove_product'),
     path('order/', OrderView.as_view(), name='order'),

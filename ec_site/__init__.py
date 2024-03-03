@@ -1,0 +1,1 @@
+default_app_config = 'ec_site.apps.EcSiteConfig'

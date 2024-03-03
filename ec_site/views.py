@@ -1,24 +1,21 @@
-from typing import Any
-from django.db import models
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.views.generic import ListView, DetailView, View, TemplateView, UpdateView
+from django.views.generic import ListView, DetailView, View, UpdateView
 from .models import Product, Order, OrderProduct, CustomUser, Payment, ShippingAddress
 from allauth.account import views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import  SignupUserForm, ShippingAddressForm
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 import stripe
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-class Top(TemplateView):
-    template_name = 'top.html'
 
 class ProfileView(View):
     def get(self, request, *args, **kwargs):
@@ -30,7 +27,6 @@ from allauth.account.views import EmailView, PasswordResetView, PasswordResetDon
 
 class CustomEmailView(EmailView):
     template_name = 'account/email.html'
-    pass
 
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'account/password_reset.html'
@@ -124,10 +120,45 @@ class ProductDetailFunc(DetailView):
         return render(request, 'products/product_detail.html', {'product_data': product_data})
 
 
-@login_required
-def AddProduct(request, slug):
+def AddProductToCart(request, slug):
     product = get_object_or_404(Product, slug=slug)
-    quantity = int(request.POST.get('quantity', 1))  # フォームから送信された数量を取得
+    quantity = int(request.POST.get('quantity', 1))
+    
+    if request.user.is_authenticated:
+        order_product, created = OrderProduct.objects.get_or_create(
+            product=product,
+            user=request.user,
+            ordered=False
+        )
+        order_qs = Order.objects.filter(user=request.user, ordered=False)
+        if order_qs.exists():
+            order = order_qs[0]
+            if order.products.filter(product__slug=product.slug).exists():
+                order_product.quantity += quantity
+                order_product.save()
+            else:
+                order_product.quantity = quantity
+                order_product.save()
+                order.products.add(order_product)
+        else:
+            order = Order.objects.create(user=request.user, ordered_date=timezone.now())
+            order_product.quantity = quantity
+            order_product.save()
+            order.products.add(order_product)
+    else:
+        cart = request.session.get('cart', {})
+        item_id = str(product.id)
+        if item_id in cart:
+            cart[item_id]['quantity'] += quantity
+        else:
+            image_url = product.images.first().image.url if product.images.exists() else "https://via.placeholder.com/150"
+            cart[item_id] = {'quantity': quantity, 'slug': product.slug, 'price': str(product.price), 'image_url': image_url}
+        request.session['cart'] = cart
+        request.session.modified = True
+    return redirect('order')
+
+
+def AddProductToOrder(request, product, quantity):
     order_product, created = OrderProduct.objects.get_or_create(
         product=product,
         user=request.user,
@@ -137,76 +168,132 @@ def AddProduct(request, slug):
     if order_qs.exists():
         order = order_qs[0]
         if order.products.filter(product__slug=product.slug).exists():
-            order_product.quantity += quantity  # 既存の数量に追加
+            order_product.quantity += quantity
             order_product.save()
         else:
-            order_product.quantity = quantity  # 新しい数量を設定
+            order_product.quantity = quantity
             order_product.save()
             order.products.add(order_product)
     else:
         order = Order.objects.create(user=request.user, ordered_date=timezone.now())
-        order_product.quantity = quantity  # 新しい数量を設定
+        order_product.quantity = quantity
         order_product.save()
         order.products.add(order_product)
-    
-    return redirect('order')
 
 
 def ReductionProduct(request, slug):
-    product = get_object_or_404(Product, slug=slug)
-    order_qs = Order.objects.filter(user=request.user, ordered=False)
-    if order_qs.exists():
-        order = order_qs[0]
-        # 商品が注文に存在するか確認
-        if order.products.filter(product__slug=product.slug).exists():
-            order_product = OrderProduct.objects.filter(
-                product=product,
-                user=request.user,
-                ordered=False
-            )[0]
-            if order_product.quantity > 1:
-                order_product.quantity -= 1
-                order_product.save()
+    if request.user.is_authenticated:
+        # ログインしている場合の処理
+        product = get_object_or_404(Product, slug=slug)
+        order_qs = Order.objects.filter(user=request.user, ordered=False)
+        if order_qs.exists():
+            order = order_qs[0]
+            if order.products.filter(product__slug=product.slug).exists():
+                order_product = OrderProduct.objects.filter(
+                    product=product,
+                    user=request.user,
+                    ordered=False
+                )[0]
+                if order_product.quantity > 1:
+                    order_product.quantity -= 1
+                    order_product.save()
+                else:
+                    order.products.remove(order_product)
+                messages.info(request, "この商品の数量が更新されました。")
             else:
-                order.products.remove(order_product)
+                messages.info(request, "この商品はあなたのカートにありません。")
+        else:
+            messages.info(request, "あなたにはアクティブな注文がありません。")
+    else:
+        # ログインしていない場合の処理
+        cart = request.session.get('cart', {})
+        # slugを使ってProductを取得する処理を追加
+        product = get_object_or_404(Product, slug=slug)
+        item_id = str(product.id)  # ここでproduct変数を使用
+        if item_id in cart:
+            if cart[item_id]['quantity'] > 1:
+                cart[item_id]['quantity'] -= 1
+            else:
+                del cart[item_id]
+            request.session['cart'] = cart
             messages.info(request, "この商品の数量が更新されました。")
         else:
-            messages.info(request, "この商品はあなたのカートにありません。")
-    else:
-        messages.info(request, "あなたにはアクティブな注文がありません。")
+            messages.info(request, "この商品はカートにありません。")
     return redirect('order')
 
 def RemoveProduct(request, slug):
-    product = get_object_or_404(Product, slug=slug)
-    order_qs = Order.objects.filter(user=request.user, ordered=False)
-    if order_qs.exists():
-        order = order_qs[0]
-        # 商品が注文に存在するか確認
-        if order.products.filter(product__slug=product.slug).exists():
-            order_product = OrderProduct.objects.filter(
-                product=product,
-                user=request.user,
-                ordered=False
-            )[0]
-            order.products.remove(order_product)
-            order_product.delete()
-            messages.warning(request, "この商品があなたのカートから削除されました。")
+    if request.user.is_authenticated:
+        # ログインしている場合の処理
+        product = get_object_or_404(Product, slug=slug)
+        order_qs = Order.objects.filter(user=request.user, ordered=False)
+        if order_qs.exists():
+            order = order_qs[0]
+            if order.products.filter(product__slug=product.slug).exists():
+                order_product = OrderProduct.objects.filter(
+                    product=product,
+                    user=request.user,
+                    ordered=False
+                )[0]
+                order.products.remove(order_product)
+                order_product.delete()
+                messages.warning(request, "この商品があなたのカートから削除されました。")
+            else:
+                messages.info(request, "この商品はあなたのカートにありません。")
         else:
-            messages.info(request, "この商品はあなたのカートにありません。")
+            messages.info(request, "あなたにはアクティブな注文がありません。")
     else:
-        messages.info(request, "あなたにはアクティブな注文がありません。")
+        # ログインしていない場合の処理
+        cart = request.session.get('cart', {})
+        # slugを使ってProductを取得する処理を追加
+        product = get_object_or_404(Product, slug=slug)
+        item_id = str(product.id)  # ここでproduct変数を使用
+        if item_id in cart:
+            del cart[item_id]
+            request.session['cart'] = cart
+            messages.warning(request, "この商品がカートから削除されました。")
+        else:
+            messages.info(request, "この商品はカートにありません。")
     return redirect('order')
 
-class OrderView(LoginRequiredMixin, View):
+
+class OrderView(View):
     def get(self, request, *args, **kwargs):
-        try:
-            order = Order.objects.get(user=request.user, ordered=False)
+        if request.user.is_authenticated:
+            try:
+                order = Order.objects.get(user=request.user, ordered=False)
+                total = order.get_total()
+                # 商品の個数の合計を計算
+                product_count = sum([item.quantity for item in order.products.all()])
+                context = {
+                    'order': order,
+                    'total': total,
+                    'product_count': product_count
+                }
+                return render(request, 'order.html', context)
+            except ObjectDoesNotExist:
+                return render(request, 'order.html', {'message': 'カートに商品がありません。'})
+        else:
+            # ログインしていない場合の処理
+            cart = request.session.get('cart', {})
+            products = []
+            total = 0
+            product_count = 0  # 商品の個数の合計を初期化
+            for item_id, item_data in cart.items():
+                product = get_object_or_404(Product, id=item_id)
+                total += product.price * item_data['quantity']
+                product_count += item_data['quantity']  # 商品の個数の合計を加算
+                products.append({
+                    'product': product,
+                    'quantity': item_data['quantity'],
+                    'total_price': product.price * item_data['quantity']
+                })
             context = {
-                'order': order
+                'products': products,
+                'total': total,
+                'is_authenticated': False,
+                'product_count': product_count 
             }
             return render(request, 'order.html', context)
-        except ObjectDoesNotExist:
-            return render(request, 'order.html')
         
 
 class PaymentView(LoginRequiredMixin, View):
@@ -228,7 +315,6 @@ class PaymentView(LoginRequiredMixin, View):
     
     
     def post(self, request, *args, **kwargs):
-        stripe.api_key = settings.STRIPE_SECRET_KEY
         order = Order.objects.get(user=request.user, ordered=False)
         token = request.POST.get('stripeToken')
         if not token:
@@ -284,7 +370,6 @@ def Search(request):
         products = Product.objects.filter(product_name__icontains=query)
     return render(request, 'search_results.html', {'products': products})
 
-from django.http import JsonResponse
 
 def SearchSuggest(request):
     query = request.GET.get('q', '')
