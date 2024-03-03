@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">検索結果</h2>
+  {% if products %}
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for product in products %}
+    <div class="col">
+      <div class="card h-100">
+        <a href="{% url 'product_detail' product.slug %}" style="text-decoration: none; color: inherit;">
+          {% if product.images.all %}
+          <img src="{{ product.images.all.0.image.url }}" class="card-img-top" alt="{{ product.product_name }}">
+          {% else %}
+          <img src="https://via.placeholder.com/150" class="card-img-top" alt="Placeholder">
+          {% endif %}
+        </a>
+        <a href="{% url 'product_detail' product.slug %}" style="text-decoration: none; color: inherit;">
+          <div class="card-body">
+            <h5 class="card-title">{{ product.product_name }}</h5>
+            <p class="card-text">{{ product.description }}</p>
+            <p class="card-text"><strong>¥{{ product.price|floatformat:"-0" }}</strong></p>
+          </div>
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="alert alert-warning" role="alert">
+    該当する商品が見つかりませんでした。
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -213,12 +213,19 @@ class PaymentView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         order = Order.objects.get(user=request.user, ordered=False)
         user_data = CustomUser.objects.get(id=request.user.id)
+        # 配送料の計算
+        if order.get_total() > 5000:
+            shipping_cost = 0
+        else:
+            shipping_cost = 1250
         context = {
             'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
             'order': order,
-            'user_data': user_data
+            'user_data': user_data,
+            'shipping_cost': shipping_cost, 
         }
         return render(request, 'payment.html', context)
+    
     
     def post(self, request, *args, **kwargs):
         stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -228,6 +235,11 @@ class PaymentView(LoginRequiredMixin, View):
             return HttpResponse('Invalid token', status=400)
         order_products = order.products.all()
         amount = order.get_total()
+        if amount > 5000:
+            shipping_cost = 0
+        else:
+            shipping_cost = 1250
+        total_amount = amount + shipping_cost
         product_list = []
         for order_product in order_products:
             product_list.append(str(order_product.product) + ':' + str(order_product.quantity))
@@ -235,7 +247,7 @@ class PaymentView(LoginRequiredMixin, View):
 
         try:
             charge = stripe.Charge.create(
-                amount=amount,
+                amount=total_amount,
                 currency='jpy',
                 description=description,
                 source=token,
@@ -245,7 +257,7 @@ class PaymentView(LoginRequiredMixin, View):
 
         payment = Payment(user=request.user)
         payment.stripe_charge_id = charge['id']
-        payment.amount = amount
+        payment.amount = total_amount
         payment.save()
 
         order_products.update(ordered=True)
@@ -263,3 +275,18 @@ class ThanksView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         return render(request, 'thanks.html')
 
+
+
+def Search(request):
+    query = request.GET.get('q')
+    products = None
+    if query:
+        products = Product.objects.filter(product_name__icontains=query)
+    return render(request, 'search_results.html', {'products': products})
+
+from django.http import JsonResponse
+
+def SearchSuggest(request):
+    query = request.GET.get('q', '')
+    suggestions = list(Product.objects.filter(product_name__icontains=query).values('product_name', 'slug')[:5])
+    return JsonResponse(suggestions, safe=False)

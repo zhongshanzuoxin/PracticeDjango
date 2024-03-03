@@ -2,44 +2,37 @@
 
 {% block content %}
 <div class="container">
-    <div class="card card-profile mt-5 mx-auto">
+    <div class="card card-profile mt-5 mx-auto" style="max-width: 540px;">
         <div class="card-body">
             <h5 class="card-title text-center">プロフィール</h5>
-            <table class="profile_table mb-4">
-                <tbody>
-                    <tr>
-                        <th class="header">名前</th>
-                        <td class="data">{{ user_data.full_name }}</td>
-                        <td>
-                            <!-- 名前編集ページへのリンク -->
-                            <a href="{% url 'name_edit' %}" class="btn btn-sm btn-primary">編集</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th class="header">メールアドレス</th>
-                        <td class="data">{{ user_data.email }}</td>
-                        <td>
-                            <!-- メールアドレス編集ページへのリンク -->
-                            <a href="{% url 'account_email' %}" class="btn btn-sm btn-primary">編集</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th class="header">パスワード</th>
-                        <td class="data">********</td>
-                        <td>
-                            <a href="{% url 'account_reset_password' %}" class="btn btn-sm btn-primary">編集</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th class="header">入会日</th>
-                        <td class="data">{{ user_data.created_at }}</td>
-                        <!-- 入会日は編集不可と仮定 -->
-                    </tr>
-                </tbody>
-            </table>
-            <!-- ここにあった全体の編集ボタンは削除 -->
+            <form>
+                <div class="mb-3">
+                    <label for="fullName" class="form-label">名前</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="fullName" value="{{ request.user.full_name }}" disabled>
+                        <a href="{% url 'name_edit' %}" class="btn btn-outline-primary btn-sm">編集</a>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Eメール</label>
+                    <div class="input-group">
+                        <input type="email" class="form-control" id="email" value="{{ request.user.email }}" disabled>
+                        <a href="{% url 'account_email' %}" class="btn btn-outline-primary btn-sm">編集</a>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">パスワード</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="password" value="********" disabled>
+                        <a href="{% url 'account_reset_password' %}" class="btn btn-outline-primary btn-sm">編集</a>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="dateJoined" class="form-label">入会日</label>
+                    <input type="text" class="form-control" id="dateJoined" value="{{ request.user.created_at }}" disabled>
+                </div>
+            </form>
         </div>
     </div>
 </div>
-
 {% endblock %}

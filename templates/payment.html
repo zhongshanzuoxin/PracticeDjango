@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% load static %} 
+{% extends "base.html" %} {% load static %}
 
 {% block content %}
 <div class="my-5">
@@ -39,17 +39,20 @@
           </div>
           <p class="fw-bold">注文内容</p>
           <p>商品の小計：{{ order.get_total|floatformat:"0" }}円</p>
-          <p>配送料：0円</p>
+          <!-- 配送料の表示を動的に変更 -->
+          <p>配送料：{{ shipping_cost|default:"0"|floatformat:"0" }}円</p>
           <hr />
+          <!-- ご請求金額に配送料を含める -->
           <p class="fw-bold text-danger">
-            ご請求金額：{{ order.get_total|floatformat:"0" }}円
+            ご請求金額：{{ order.get_total|add:shipping_cost|default:"0"|floatformat:"0" }}円
           </p>
         </div>
       </div>
     </div>
   </div>
 </form>
-{% endblock %} {% block extra_js %}
+{% endblock %}
+{% block extra_js %}
 <script src="https://js.stripe.com/v3/"></script>
 <script type="text/javascript">
     //STRIPE_PUBLIC_KEYをJavaScript変数に代入
@@ -57,4 +60,3 @@
 </script>
 <script src="{% static 'ec_site/js/stripe.js' %}"></script>
 {% endblock %}
-
