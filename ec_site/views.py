@@ -136,23 +136,28 @@ def AddProductToCart(request, slug):
             if order.products.filter(product__slug=product.slug).exists():
                 order_product.quantity += quantity
                 order_product.save()
+                messages.info(request, f'カート内の {product.product_name} の数量が {order_product.quantity} に更新されました。')
             else:
                 order_product.quantity = quantity
                 order_product.save()
                 order.products.add(order_product)
+                messages.success(request, f'{product.product_name} をカートに追加しました。')
         else:
             order = Order.objects.create(user=request.user, ordered_date=timezone.now())
             order_product.quantity = quantity
             order_product.save()
             order.products.add(order_product)
+            messages.success(request, f'{product.product_name} をカートに追加しました。')
     else:
         cart = request.session.get('cart', {})
         item_id = str(product.id)
         if item_id in cart:
             cart[item_id]['quantity'] += quantity
+            messages.info(request, f'カート内の {product.product_name} の数量が {cart[item_id]["quantity"]} に更新されました。')
         else:
             image_url = product.images.first().image.url if product.images.exists() else "https://via.placeholder.com/150"
             cart[item_id] = {'quantity': quantity, 'slug': product.slug, 'price': str(product.price), 'image_url': image_url}
+            messages.success(request, f'{product.product_name} をカートに追加しました。')
         request.session['cart'] = cart
         request.session.modified = True
     return redirect('order')
