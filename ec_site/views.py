@@ -186,6 +186,8 @@ def AddProductToOrder(request, product, quantity):
         order.products.add(order_product)
 
 
+from django.contrib import messages
+
 def ReductionProduct(request, slug):
     if request.user.is_authenticated:
         # ログインしている場合の処理
@@ -202,28 +204,31 @@ def ReductionProduct(request, slug):
                 if order_product.quantity > 1:
                     order_product.quantity -= 1
                     order_product.save()
+                    messages.info(request, f"カート内の {product.product_name} の数量が {order_product.quantity} に更新されました。")
                 else:
                     order.products.remove(order_product)
-                messages.info(request, "この商品の数量が更新されました。")
+                    order_product.delete()
+                    messages.warning(request, f"{product.product_name} をカートから削除しました。")
             else:
-                messages.info(request, "この商品はあなたのカートにありません。")
+                messages.info(request, f"{product.product_name} はあなたのカートにありません。")
         else:
-            messages.info(request, "あなたにはアクティブな注文がありません。")
+            messages.info(request, "アクティブな注文がありません。")
     else:
         # ログインしていない場合の処理
         cart = request.session.get('cart', {})
-        # slugを使ってProductを取得する処理を追加
         product = get_object_or_404(Product, slug=slug)
-        item_id = str(product.id)  # ここでproduct変数を使用
+        item_id = str(product.id)
         if item_id in cart:
             if cart[item_id]['quantity'] > 1:
                 cart[item_id]['quantity'] -= 1
+                messages.info(request, f"カート内の {product.product_name} の数量が {cart[item_id]['quantity']} に更新されました。")
             else:
                 del cart[item_id]
+                messages.warning(request, f"{product.product_name} をカートから削除しました。")
             request.session['cart'] = cart
-            messages.info(request, "この商品の数量が更新されました。")
+            request.session.modified = True
         else:
-            messages.info(request, "この商品はカートにありません。")
+            messages.info(request, f"{product.product_name} はカートにありません。")
     return redirect('order')
 
 def RemoveProduct(request, slug):
