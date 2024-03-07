@@ -123,6 +123,10 @@ class ProductDetailFunc(DetailView):
 def AddProductToCart(request, slug):
     product = get_object_or_404(Product, slug=slug)
     quantity = int(request.POST.get('quantity', 1))
+
+    if quantity > product.stock:
+        messages.error(request, f'在庫が不足しています。')
+        return redirect("product_detail", slug=slug)
     
     if request.user.is_authenticated:
         order_product, created = OrderProduct.objects.get_or_create(
@@ -256,7 +260,7 @@ def RemoveProduct(request, slug):
         cart = request.session.get('cart', {})
         # slugを使ってProductを取得する処理を追加
         product = get_object_or_404(Product, slug=slug)
-        item_id = str(product.id)  # ここでproduct変数を使用
+        item_id = str(product.id) 
         if item_id in cart:
             del cart[item_id]
             request.session['cart'] = cart
@@ -326,6 +330,13 @@ class PaymentView(LoginRequiredMixin, View):
     
     def post(self, request, *args, **kwargs):
         order = Order.objects.get(user=request.user, ordered=False)
+        # 在庫チェック
+        for order_product in order.products.all():
+            if order_product.quantity > order_product.product.stock:
+                messages.error(request, f"{order_product.product.product_name} の在庫が不足しています。")
+                order.products.remove(order_product)
+                return redirect('order')
+            
         token = request.POST.get('stripeToken')
         if not token:
             return HttpResponse('Invalid token', status=400)
