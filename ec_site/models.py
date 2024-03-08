@@ -82,7 +82,8 @@ class ShippingAddress(models.Model):
     )
 
     def __str__(self):
-        return f"{self.user.email}の配送先"
+        address_line2_formatted = f", {self.address_line2}" if self.address_line2 else ""
+        return f"{self.recipient_name} {self.postal_code},{self.prefectures}, {self.city}, {self.address_line1}{address_line2_formatted}, {self.phone_number}"
     
 class Meta:
     verbose_name = '配送先アドレス'

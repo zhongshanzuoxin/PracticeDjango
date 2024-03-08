@@ -13,7 +13,15 @@
           <div class="row g-3">
             <div class="col-md-6">
               <p class="fw-bold">お届け先住所</p>
-              <p>名前：{{ user_data.full_name }}</p>
+              <!-- お届け先住所のドロップダウンリストを追加 -->
+              <div class="mb-3">
+                <label for="shippingAddress" class="form-label">配送先住所を選択</label>
+                <select name="shippingAddress" id="shippingAddress" class="form-control">
+                  {% for address in shipping_addresses %}
+                  <option value="{{ address.id }}">{{ address }}</option>
+                  {% endfor %}
+                </select>
+              </div>
             </div>
             <div class="col-md-6">
               <p class="fw-bold">お支払い方法</p>

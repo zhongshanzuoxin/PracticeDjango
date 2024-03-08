@@ -291,7 +291,7 @@ class OrderView(View):
             cart = request.session.get('cart', {})
             products = []
             total = 0
-            product_count = 0  # 商品の個数の合計を初期化
+            product_count = 0 
             for item_id, item_data in cart.items():
                 product = get_object_or_404(Product, id=item_id)
                 total += product.price * item_data['quantity']
@@ -314,6 +314,7 @@ class PaymentView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         order = Order.objects.get(user=request.user, ordered=False)
         user_data = CustomUser.objects.get(id=request.user.id)
+        shipping_addresses = ShippingAddress.objects.filter(user=request.user)
         # 配送料の計算
         if order.get_total() > 5000:
             shipping_cost = 0
@@ -323,6 +324,7 @@ class PaymentView(LoginRequiredMixin, View):
             'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
             'order': order,
             'user_data': user_data,
+            'shipping_addresses': shipping_addresses,
             'shipping_cost': shipping_cost, 
         }
         return render(request, 'payment.html', context)
@@ -370,7 +372,7 @@ class PaymentView(LoginRequiredMixin, View):
         order_products.update(ordered=True)
         for product in order_products:
             product.product.stock -= product.quantity  # 在庫を減らす
-            product.product.save()  # Productモデルの更新を保存
+            product.product.save() 
             product.save()
 
         order.ordered = True
