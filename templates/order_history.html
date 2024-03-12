@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+  <h2>注文履歴</h2>
+  <div class="row">
+    {% for order in orders %}
+    <div class="col-md-4">
+      <div class="card mb-3">
+        <div class="card-header">
+          注文番号: {{ order.id }}
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">注文日時: {{ order.ordered_date }}</h5>
+          <p class="card-text">合計金額: ¥{{ order.get_total_with_shipping }}</p>
+          <a href="{% url 'order_detail' order.id %}" class="btn btn-primary">注文の詳細</a>
+          <hr>
+          <h6 class="card-subtitle mb-2 text-muted">注文商品:</h6>
+          <ul>
+            {% for order_product in order.products.all %}
+              <li>{{ order_product.product.product_name }}: {{ order_product.quantity }}個</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <p>注文履歴がありません。</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

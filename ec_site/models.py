@@ -137,6 +137,7 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     ordered_date = models.DateTimeField()
     ordered = models.BooleanField(default=False)
+    shipping_address = models.ForeignKey('ShippingAddress', on_delete=models.SET_NULL, blank=True, null=True, related_name='orders')
     payment = models.ForeignKey('Payment', on_delete=models.SET_NULL, blank=True, null=True)
 
     def get_total(self):
@@ -144,7 +145,16 @@ class Order(models.Model):
         for order_product in self.products.all():
             total += order_product.get_total_product_price()
         return int(total)
-    
+
+    def shipping_cost(self):
+        if self.get_total() > 5000:
+            return 0
+        else:
+            return 1250
+
+    def get_total_with_shipping(self):
+        return self.get_total() + self.shipping_cost()
+
     def __str__(self):
         return self.user.email
     
@@ -153,11 +163,9 @@ class Payment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True)
     stripe_charge_id = models.CharField(max_length=50)
     amount = models.IntegerField()
+    card_last4 = models.CharField(max_length=4, blank=True, null=True)
+    card_brand = models.CharField(max_length=50, blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.user.email
-
-
-
-

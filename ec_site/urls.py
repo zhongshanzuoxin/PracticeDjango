@@ -26,7 +26,8 @@ from .views import (
     ThanksView,
     Search,
     SearchSuggest,
-    
+    OrderHistory,
+    OrderDetail,
 )
 
 urlpatterns = [
@@ -54,4 +55,6 @@ urlpatterns = [
     path('thanks/', ThanksView.as_view(), name='thanks'),
     path('search/', Search, name='search'),
     path('search-suggest/', SearchSuggest, name='search_suggest'),
+    path('order_history/', OrderHistory, name='order_history'),
+    path('order_detail/<int:order_id>/', OrderDetail, name='order_detail'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

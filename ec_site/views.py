@@ -1,4 +1,3 @@
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -315,11 +314,10 @@ class PaymentView(LoginRequiredMixin, View):
         order = Order.objects.get(user=request.user, ordered=False)
         user_data = CustomUser.objects.get(id=request.user.id)
         shipping_addresses = ShippingAddress.objects.filter(user=request.user)
-        # 配送料の計算
-        if order.get_total() > 5000:
-            shipping_cost = 0
-        else:
-            shipping_cost = 1250
+        
+        # Orderモデルのshipping_costメソッドを使用して配送料を取得
+        shipping_cost = order.shipping_cost()
+
         context = {
             'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
             'order': order,
@@ -332,6 +330,17 @@ class PaymentView(LoginRequiredMixin, View):
     
     def post(self, request, *args, **kwargs):
         order = Order.objects.get(user=request.user, ordered=False)
+        # フォームから選択された配送先住所のIDを取得
+        shipping_address_id = request.POST.get('shippingAddress')
+        if shipping_address_id:
+            # 選択された配送先住所のオブジェクトを取得
+            shipping_address = ShippingAddress.objects.get(id=shipping_address_id)
+            # Orderオブジェクトに配送先住所を設定
+            order.shipping_address = shipping_address
+        else:
+            # 配送先住所が選択されていない場合の処理（エラーメッセージを表示するなど）
+            messages.error(request, "配送先住所が選択されていません。")
+            return redirect('payment')
         # 在庫チェック
         for order_product in order.products.all():
             if order_product.quantity > order_product.product.stock:
@@ -344,11 +353,11 @@ class PaymentView(LoginRequiredMixin, View):
             return HttpResponse('Invalid token', status=400)
         order_products = order.products.all()
         amount = order.get_total()
-        if amount > 5000:
-            shipping_cost = 0
-        else:
-            shipping_cost = 1250
+        
+        # Orderモデルのshipping_costメソッドを使用して配送料を取得
+        shipping_cost = order.shipping_cost()
         total_amount = amount + shipping_cost
+
         product_list = []
         for order_product in order_products:
             product_list.append(str(order_product.product) + ':' + str(order_product.quantity))
@@ -361,25 +370,29 @@ class PaymentView(LoginRequiredMixin, View):
                 description=description,
                 source=token,
             )
+            # Stripeの支払い処理が成功した後、Paymentオブジェクトを作成
+            payment = Payment(
+                user=request.user,
+                stripe_charge_id=charge['id'],
+                amount=total_amount,
+                card_last4=charge.payment_method_details.card.last4,  # カードの下4桁を保存
+                card_brand=charge.payment_method_details.card.brand,  # カードブランドを保存
+            )
+            payment.save()
+
+            order_products.update(ordered=True)
+            for product in order_products:
+                product.product.stock -= product.quantity
+                product.product.save() 
+                product.save()
+
+            order.ordered = True
+            order.payment = payment
+            order.save()
+            return redirect('thanks')
         except stripe.error.StripeError as e:
             return HttpResponse(str(e), status=400)
 
-        payment = Payment(user=request.user)
-        payment.stripe_charge_id = charge['id']
-        payment.amount = total_amount
-        payment.save()
-
-        order_products.update(ordered=True)
-        for product in order_products:
-            product.product.stock -= product.quantity  # 在庫を減らす
-            product.product.save() 
-            product.save()
-
-        order.ordered = True
-        order.payment = payment
-        order.save()
-        return redirect('thanks')
-    
 class ThanksView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         return render(request, 'thanks.html')
@@ -398,3 +411,20 @@ def SearchSuggest(request):
     query = request.GET.get('q', '')
     suggestions = list(Product.objects.filter(product_name__icontains=query).values('product_name', 'slug')[:5])
     return JsonResponse(suggestions, safe=False)
+
+def OrderHistory(request):
+    orders = Order.objects.filter(user=request.user, ordered=True).order_by('-ordered_date')
+    return render(request, 'order_history.html', {'orders': orders})
+
+@login_required
+def OrderDetail(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user, ordered=True)
+    context = {
+        'order': order,
+        'shipping_address': order.shipping_address,
+        'shipping_cost': order.shipping_cost if order.shipping_cost else 0,
+        'total': order.get_total(),
+        'total_with_shipping': order.get_total_with_shipping(),
+    }
+    return render(request, 'order_detail.html', context)
+

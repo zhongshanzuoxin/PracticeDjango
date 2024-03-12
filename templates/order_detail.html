@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+  <h2>注文詳細</h2>
+  <div class="card mb-3">
+    <div class="card-header">
+      注文番号: {{ order.id }}
+    </div>
+    <div class="card-body">
+      <h5 class="card-title">お届け先住所: {{ shipping_address }}</h5>
+      <!-- 支払い方法の表示を修正 -->
+      <p class="card-text">支払い方法: 
+        {% if order.payment %}
+          {{ order.payment.card_brand }} 下4桁 {{ order.payment.card_last4 }}
+        {% else %}
+          未設定
+        {% endif %}
+      </p>
+      <p class="card-text">商品の小計: ¥{{ total }}</p>
+      <p class="card-text">配送料: ¥{{ shipping_cost }}</p>
+      <hr>
+      <p class="fw-bold text-danger">請求金額: ¥{{ total_with_shipping }}</p>
+      <hr>
+      <h5 class="card-title">注文商品:</h5>
+      <ul>
+        {% for order_product in order.products.all %}
+          <li>
+            <a href="{% url 'product_detail' order_product.product.slug %}">
+              {% if order_product.product.images.all %}
+                <img src="{{ order_product.product.images.all.first.image.url }}" alt="{{ order_product.product.product_name }}" style="width:100px;">
+              {% else %}
+                <!-- 画像がない場合の代替画像 -->
+                <img src="https://via.placeholder.com/100" alt="No image available" style="width:100px;">
+              {% endif %}
+              {{ order_product.product.product_name }}
+            </a>
+            : {{ order_product.quantity }}個
+            ¥{{ order_product.product.price|floatformat:"0" }}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

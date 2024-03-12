@@ -23,6 +23,6 @@ admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(ShippingAddress, ShippingAddressAdmin)
 admin.site.register(Order)
 admin.site.register(OrderProduct)
-admin.site.register(Product, ProductAdmin)  # ProductをProductAdminで登録
+admin.site.register(Product, ProductAdmin)
 admin.site.register(Payment)
 admin.site.register(Category)
