@@ -10,6 +10,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import  SignupUserForm, ShippingAddressForm
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
+from django.core.paginator import Paginator
 from django.contrib import messages
 import stripe
 
@@ -413,7 +414,10 @@ def SearchSuggest(request):
     return JsonResponse(suggestions, safe=False)
 
 def OrderHistory(request):
-    orders = Order.objects.filter(user=request.user, ordered=True).order_by('-ordered_date')
+    order_list = Order.objects.filter(user=request.user, ordered=True).order_by('-ordered_date')
+    paginator = Paginator(order_list, 10)  # 1ページあたり10件の注文を表示
+    page_number = request.GET.get('page')
+    orders = paginator.get_page(page_number)
     return render(request, 'order_history.html', {'orders': orders})
 
 @login_required
