@@ -103,6 +103,15 @@ class LoginFunc(views.LoginView):
     template_name = 'login.html'
     authentication_form = None
 
+    def form_valid(self, form):
+        # ログイン処理
+        super().form_valid(form)
+        # 'next' パラメータを取得
+        next_url = self.request.GET.get('next')
+        if next_url:
+            return redirect(next_url)
+        return redirect('top')
+
 class LogoutFunc(views.LogoutView):
     def post(self, request, *args, **kwargs):
         if self.request.user.is_authenticated:

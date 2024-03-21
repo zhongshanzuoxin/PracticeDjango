@@ -1,9 +1,22 @@
 {% extends 'base.html' %}
 
+
 {% block content %}
 <div class="container my-5">
-  <h3>ショッピングカート</h3>
-
+  <div class="steps-bar nav nav-pills justify-content-center">
+    <div class="step nav-item {% if request.resolver_match.url_name == 'order' %}active{% endif %}">
+      <span class="nav-link disabled">買い物かご</span>
+    </div>
+    <div class="step nav-item">
+      <span class="nav-link {% if not user.is_authenticated and request.resolver_match.url_name != 'order' %}active{% endif %} disabled">ログイン</span>
+    </div>
+    <div class="step nav-item">
+      <span class="nav-link disabled">注文確認</span>
+    </div>
+  </div>
+  <div class="my-5">
+    <h3>ショッピングカート</h3>
+  </div>
 
   <div class="row order">
     <div class="col-md-9 mb-5">
@@ -77,7 +90,11 @@
             {% if user.is_authenticated %}
             <a class="btn btn-warning" href="{% url 'payment' %}">レジに進む</a>
             {% else %}
-              <a class="btn btn-warning" href="{% url 'login' %}">ログインして購入を続ける</a>
+                {% if request.session.cart %}
+                    <a href="{% url 'login' %}?next={% url 'payment' %}" class="btn btn-primary">ログインして購入を続ける</a>
+                {% else %}
+                    <button class="btn btn-primary" disabled>ログインして購入を続ける</button>
+                {% endif %}
             {% endif %}
           </div>
           <a class="btn btn-primary" href="{% url 'product_list' %}">買い物を続ける</a>
