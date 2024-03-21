@@ -169,7 +169,7 @@ def AddProductToCart(request, slug):
             messages.info(request, f'カート内の {product.product_name} の数量が {cart[item_id]["quantity"]} に更新されました。')
         else:
             image_url = product.images.first().image.url if product.images.exists() else "https://via.placeholder.com/150"
-            cart[item_id] = {'quantity': quantity, 'slug': product.slug, 'price': str(product.price), 'image_url': image_url}
+            cart[item_id] = {'quantity': quantity, 'slug': product.slug, 'price': str(product.price), 'image_url': image_url, 'name': product.product_name}
             messages.success(request, f'{product.product_name} をカートに追加しました。')
         request.session['cart'] = cart
         request.session.modified = True
@@ -267,7 +267,6 @@ def RemoveProduct(request, slug):
     else:
         # ログインしていない場合の処理
         cart = request.session.get('cart', {})
-        # slugを使ってProductを取得する処理を追加
         product = get_object_or_404(Product, slug=slug)
         item_id = str(product.id) 
         if item_id in cart:
@@ -308,7 +307,8 @@ class OrderView(View):
                 products.append({
                     'product': product,
                     'quantity': item_data['quantity'],
-                    'total_price': product.price * item_data['quantity']
+                    'total_price': product.price * item_data['quantity'],
+                    'name': product.product_name 
                 })
             context = {
                 'products': products,

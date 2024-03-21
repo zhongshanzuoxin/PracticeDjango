@@ -44,7 +44,3 @@
         height: 2px;
         background-color: #ccc;
       }
-      
-      .step.active:not(:last-child)::after {
-        background-color: #dc3545; /* アクティブなステップの線の色 */
-      }
