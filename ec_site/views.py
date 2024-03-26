@@ -60,6 +60,8 @@ def AddShippingAddress(request):
             shipping_address.user = request.user
             shipping_address.save()
             return redirect('shipping_address_list')
+        else:
+            messages.error(request, '入力内容に誤りがあります。')
     else:
         form = ShippingAddressForm()
     return render(request, 'add_shipping_address.html', {'form': form})
@@ -72,6 +74,8 @@ def EditShippingAddress(request, id):
         if form.is_valid():
             form.save()
             return redirect('shipping_address_list')
+        else:
+            messages.error(request, '入力内容に誤りがあります。')
     else:
         form = ShippingAddressForm(instance=shipping_address)
     return render(request, 'edit_shipping_address.html', {'form': form})
@@ -110,7 +114,7 @@ class LoginFunc(views.LoginView):
         next_url = self.request.GET.get('next')
         if next_url:
             return redirect(next_url)
-        return redirect('top')
+        return redirect('product_list')
 
 class LogoutFunc(views.LogoutView):
     def post(self, request, *args, **kwargs):

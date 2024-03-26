@@ -82,8 +82,7 @@ class ShippingAddress(models.Model):
     )
 
     def __str__(self):
-        address_line2_formatted = f", {self.address_line2}" if self.address_line2 else ""
-        return f"{self.recipient_name} {self.postal_code},{self.prefectures}, {self.city}, {self.address_line1}{address_line2_formatted}, {self.phone_number}"
+        return f"{self.recipient_name}, {self.postal_code}, {self.prefectures}, {self.city}, {self.address_line1}, {self.address_line2}, {self.phone_number}"
     
 class Meta:
     verbose_name = '配送先アドレス'
@@ -156,7 +155,7 @@ class Order(models.Model):
         return self.get_total() + self.shipping_cost()
 
     def __str__(self):
-        return self.user.email
+        return f"Order {self.id}"
     
 
 class Payment(models.Model):
@@ -168,4 +167,4 @@ class Payment(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.user.email
+        return f"Payment {self.id}"

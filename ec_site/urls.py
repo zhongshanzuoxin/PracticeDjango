@@ -31,15 +31,15 @@ from .views import (
 )
 
 urlpatterns = [
-    path('accounts/signup/', SignupFunc.as_view(), name='signup'),
-    path('accounts/login/', LoginFunc.as_view(), name='login'),
+    path('signup/', SignupFunc.as_view(), name='signup'),
+    path('login/', LoginFunc.as_view(), name='login'),
     path('logout/', LogoutFunc.as_view(), name='logout'),
     path('profile/', ProfileView.as_view(), name='profile'),
     path('profile/edit/name/', NameEditView.as_view(), name='name_edit'),
-    path('reset_email/', CustomEmailView.as_view(), name='account_email'),
+    path('accounts/reset_email/', CustomEmailView.as_view(), name='account_email'),
     path('reset_password/', CustomPasswordResetView.as_view(), name='account_reset_password'),
     path('password/reset/done/', CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
-    re_path(r'^accounts/password/reset/key/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$', CustomPasswordResetFromKeyView.as_view(), name='account_reset_password_from_key'),
+    path('accounts/password/reset/key/<uidb64>/<token>/', CustomPasswordResetFromKeyView.as_view(), name='account_reset_password_from_key'),
     path('password/reset/key/done/', CustomPasswordResetFromKeyDoneView.as_view(), name='account_reset_password_from_key_done'),
     path('add_shipping_address/', AddShippingAddress, name='add_shipping_address'),
     path('edit_shipping_address/<int:id>/', EditShippingAddress, name='edit_shipping_address'),
